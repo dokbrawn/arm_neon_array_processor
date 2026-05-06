@@ -24,7 +24,11 @@ static std::string timestamp_utc() {
     const auto now = system_clock::now();
     const auto t = system_clock::to_time_t(now);
     std::tm tm{};
+#if defined(_WIN32)
+    gmtime_s(&tm, &t);
+#else
     gmtime_r(&t, &tm);
+#endif
     char buf[64];
     std::strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S_UTC", &tm);
     return std::string(buf);

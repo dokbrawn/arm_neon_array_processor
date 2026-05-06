@@ -88,7 +88,7 @@ pandoc benchmark_<timestamp>.md -o benchmark_<timestamp>.pdf
 - Переключатели отображения графиков и логарифмической оси X.
 - Сравнение scalar/NEON/unrolled в таблице.
 - Кнопка сохранения CSV прямо из GUI.
-- Шрифт: сначала ищется Consolas, при отсутствии используется DejaVu Sans Mono.
+- Шрифт на Linux/Raspberry Pi: приоритет Noto Sans Mono / Ubuntu Mono / DejaVu Sans Mono (Consolas только как опциональный последний fallback).
 
 
 ## Тестирование на AMD64 (для проверки интерфейса)
@@ -146,3 +146,23 @@ BUILD_GUI=ON RUN_GUI=1 ./setup_and_run.sh
 BUILD_GUI=OFF ./setup_and_run.sh
 CLEAN_FIRST=0 BUILD_DIR=build_custom ./setup_and_run.sh
 ```
+
+
+### Частые ошибки на Windows
+1. **"generator platform x64 does not match previous"**  
+   Удалите кэш сборки перед повторной конфигурацией:
+   ```powershell
+   Remove-Item -Recurse -Force .\build_amd64
+   ```
+
+2. **`vcpkg` не найден в PATH**  
+   Используйте полный путь:
+   ```powershell
+   C:\vcpkg\vcpkg.exe install glfw3:x64-windows
+   ```
+
+3. **Нет `GLFW/glfw3.h` при сборке GUI**  
+   Проверьте, что CMake запускается с toolchain:
+   `-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake`.
+
+4. Если конфигурация упала, `bench_cli.exe`/`bench_gui.exe` не появятся — сначала исправьте ошибку configure/build.

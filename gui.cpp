@@ -72,9 +72,12 @@ int main() {
     ImGuiIO& io = ImGui::GetIO();
 
     const char* font_candidates[] = {
-        "/usr/share/fonts/truetype/msttcorefonts/Consolas.ttf",
-        "/usr/share/fonts/truetype/consolas/Consolas.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"};
+        "/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf",           // Ubuntu/RPi friendly
+        "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf",                 // Ubuntu default mono
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",               // common Linux fallback
+        "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",  // another Linux fallback
+        "/usr/share/fonts/truetype/msttcorefonts/Consolas.ttf",              // optional, if user installed
+        "/usr/share/fonts/truetype/consolas/Consolas.ttf"};
     for (const auto* f : font_candidates) {
         if (std::ifstream(f).good()) {
             io.Fonts->AddFontFromFileTTF(f, 18.0f, nullptr, io.Fonts->GetGlyphRangesCyrillic());

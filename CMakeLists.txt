@@ -5,9 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(bench_cli main.cpp)
-target_compile_options(bench_cli PRIVATE -O3)
 if(MSVC)
   target_compile_options(bench_cli PRIVATE /O2)
+else()
+  target_compile_options(bench_cli PRIVATE -O3)
 endif()
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm")
@@ -87,8 +88,10 @@ if(BUILD_GUI)
     ${IMGUI_DIR}/backends
     ${IMPLOT_DIR})
 
+  target_link_libraries(imgui_lib PUBLIC ${GLFW_LINK_TARGET})
+
   add_executable(bench_gui gui.cpp)
-  target_link_libraries(bench_gui PRIVATE imgui_lib ${GLFW_LINK_TARGET} OpenGL::GL)
+  target_link_libraries(bench_gui PRIVATE imgui_lib OpenGL::GL)
   if(MSVC)
     target_compile_options(bench_gui PRIVATE /O2)
   else()
