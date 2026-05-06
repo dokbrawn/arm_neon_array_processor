@@ -89,3 +89,17 @@ pandoc benchmark_<timestamp>.md -o benchmark_<timestamp>.pdf
 - Сравнение scalar/NEON/unrolled в таблице.
 - Кнопка сохранения CSV прямо из GUI.
 - Шрифт: сначала ищется Consolas, при отсутствии используется DejaVu Sans Mono.
+
+
+## Тестирование на AMD64 (для проверки интерфейса)
+На x86_64/amd64 NEON-интринсики не используются, поэтому `process_array_neon*` переходят в scalar-fallback.
+Это нормально для проверки UI/графиков.
+
+```bash
+cmake -S . -B build_amd64 -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=ON -DUSE_BUNDLED_THIRD_PARTY=ON
+cmake --build build_amd64 -j
+./build_amd64/bench_cli
+./build_amd64/bench_gui
+```
+
+В GUI можно включить пункт **"AMD64 демо-режим (эмуляция ускорения)"**, чтобы увидеть более наглядные графики ускорения для демонстрации интерфейса.

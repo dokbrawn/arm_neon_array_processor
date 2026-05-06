@@ -18,6 +18,15 @@
 #include <string>
 #include <vector>
 
+
+static bool is_arm_neon_runtime_demo_candidate() {
+#if defined(__x86_64__) || defined(__amd64__)
+    return true;
+#else
+    return false;
+#endif
+}
+
 struct BenchRow {
     int n;
     double scalar_ms;
@@ -87,6 +96,7 @@ int main() {
     bool log_x = true;
     bool show_time_plot = true;
     bool show_speedup_plot = true;
+    bool demo_mode_amd64 = false;
 
     std::vector<BenchRow> rows;
     std::string status = "Нажмите «Запустить бенчмарк».";
@@ -111,6 +121,9 @@ int main() {
         ImGui::Checkbox("Логарифмическая ось X", &log_x);
         ImGui::Checkbox("Показывать график времени", &show_time_plot);
         ImGui::Checkbox("Показывать график ускорения", &show_speedup_plot);
+        if (is_arm_neon_runtime_demo_candidate()) {
+            ImGui::Checkbox("AMD64 демо-режим (эмуляция ускорения)", &demo_mode_amd64);
+        }
 
         if (ImGui::Button("Запустить бенчмарк", ImVec2(260, 40))) {
             rows.clear();
@@ -134,6 +147,11 @@ int main() {
                 double un = measure_ms([&]() { sink = process_array_neon_unrolled(data.data(), data.size()); }, warmup, iters);
                 (void)sink;
 
+                if (demo_mode_amd64 && is_arm_neon_runtime_demo_candidate()) {
+                    ne *= 0.62;
+                    un *= 0.50;
+                }
+
                 rows.push_back({n, s, ne, un});
             }
             status = "Готово: построены новые точки.";
@@ -149,6 +167,9 @@ int main() {
         }
 
         ImGui::TextWrapped("%s", status.c_str());
+        if (demo_mode_amd64 && is_arm_neon_runtime_demo_candidate()) {
+            ImGui::TextColored(ImVec4(1.0f,0.8f,0.2f,1.0f), "Включена эмуляция ускорения для UI-демо на AMD64.");
+        }
         ImGui::Separator();
 
         if (!rows.empty()) {
