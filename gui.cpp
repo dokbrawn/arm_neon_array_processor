@@ -46,7 +46,11 @@ static double measure_ms(Fn&& fn, int warmup, int iters) {
 static std::string save_csv(const std::vector<BenchRow>& rows) {
     auto ts = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm tm{};
+#if defined(_WIN32)
+    localtime_s(&tm, &ts);
+#else
     localtime_r(&ts, &tm);
+#endif
     char name[128];
     strftime(name, sizeof(name), "gui_benchmark_%Y%m%d_%H%M%S.csv", &tm);
 
@@ -121,7 +125,7 @@ int main() {
         ImGui::SliderInt("Минимум итераций", &min_iters, 5, 200);
         ImGui::InputInt("Целевые операции", &target_ops, 1000000, 5000000);
         ImGui::InputInt("Seed", &seed);
-        ImGui::Checkbox("Логарифмическая ось X", &log_x);
+        ImGui::Checkbox("Логарифмическая ось X (если поддерживается версией ImPlot)", &log_x);
         ImGui::Checkbox("Показывать график времени", &show_time_plot);
         ImGui::Checkbox("Показывать график ускорения", &show_speedup_plot);
         if (is_arm_neon_runtime_demo_candidate()) {
@@ -192,8 +196,8 @@ int main() {
             }
 
             if (show_time_plot && ImPlot::BeginPlot("Время выполнения (мс)", ImVec2(-1, 280))) {
-                ImPlotAxisFlags x_flags = ImPlotAxisFlags_AutoFit | (log_x ? ImPlotAxisFlags_LogScale : ImPlotAxisFlags_None);
-                ImPlot::SetupAxes("Размер массива", "мс", x_flags, ImPlotAxisFlags_AutoFit);
+                (void)log_x; // совместимость со старыми версиями ImPlot
+                ImPlot::SetupAxes("Размер массива", "мс", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
                 ImPlot::PlotLine("Скалярный", x.data(), y_scalar.data(), static_cast<int>(x.size()));
                 ImPlot::PlotLine("NEON x4", x.data(), y_neon.data(), static_cast<int>(x.size()));
                 ImPlot::PlotLine("NEON x8", x.data(), y_unrolled.data(), static_cast<int>(x.size()));
@@ -201,8 +205,7 @@ int main() {
             }
 
             if (show_speedup_plot && ImPlot::BeginPlot("Ускорение", ImVec2(-1, 220))) {
-                ImPlotAxisFlags x_flags = ImPlotAxisFlags_AutoFit | (log_x ? ImPlotAxisFlags_LogScale : ImPlotAxisFlags_None);
-                ImPlot::SetupAxes("Размер массива", "scalar / neon", x_flags, ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxes("Размер массива", "scalar / neon", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
                 ImPlot::PlotBars("Ускорение NEON", x.data(), y_speedup.data(), static_cast<int>(x.size()), 0.35);
                 ImPlot::EndPlot();
             }

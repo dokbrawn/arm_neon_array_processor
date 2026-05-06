@@ -166,3 +166,6 @@ CLEAN_FIRST=0 BUILD_DIR=build_custom ./setup_and_run.sh
    `-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake`.
 
 4. Если конфигурация упала, `bench_cli.exe`/`bench_gui.exe` не появятся — сначала исправьте ошибку configure/build.
+
+
+Примечание: логарифмическая ось X зависит от версии ImPlot; в старых версиях может работать как обычная ось без ошибки сборки.
