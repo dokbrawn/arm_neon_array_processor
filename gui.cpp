@@ -121,8 +121,15 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Панель ARM NEON", nullptr, ImGuiWindowFlags_MenuBar);
-        ImGui::Text("Сравнение: скалярный vs NEON(4) vs NEON(8, unrolled)");
+        const ImGuiViewport* vp = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(vp->WorkPos);
+        ImGui::SetNextWindowSize(vp->WorkSize);
+        ImGui::SetNextWindowViewport(vp->ID);
+        ImGuiWindowFlags main_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar |
+                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                      ImGuiWindowFlags_NoCollapse;
+        ImGui::Begin("Панель ARM NEON", nullptr, main_flags);
+        ImGui::Text("Сравнение: скалярный vs NEON(4) vs NEON(8, развёрнутый)");
         ImGui::Separator();
 
         ImGui::InputInt("Начальный размер", &start_n, 100, 1000);
@@ -204,7 +211,8 @@ int main() {
 
             if (show_time_plot && ImPlot::BeginPlot("Время выполнения (мс)", ImVec2(-1, 280))) {
                 (void)log_x; // совместимость со старыми версиями ImPlot
-                ImPlot::SetupAxes("Размер массива", "мс", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxes("Размер массива", "Время, мс", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
+                ImPlot::SetupAxisLimits(ImAxis_X1, x.front(), x.back(), ImGuiCond_Once);
                 ImPlot::PlotLine("Скалярный", x.data(), y_scalar.data(), static_cast<int>(x.size()));
                 ImPlot::PlotLine("NEON x4", x.data(), y_neon.data(), static_cast<int>(x.size()));
                 ImPlot::PlotLine("NEON x8", x.data(), y_unrolled.data(), static_cast<int>(x.size()));
@@ -212,17 +220,18 @@ int main() {
             }
 
             if (show_speedup_plot && ImPlot::BeginPlot("Ускорение", ImVec2(-1, 220))) {
-                ImPlot::SetupAxes("Размер массива", "scalar / neon", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxes("Размер массива", "Ускорение (scalar/neon)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
+                ImPlot::SetupAxisLimits(ImAxis_X1, x.front(), x.back(), ImGuiCond_Once);
                 ImPlot::PlotBars("Ускорение NEON", x.data(), y_speedup.data(), static_cast<int>(x.size()), 0.35);
                 ImPlot::EndPlot();
             }
 
             if (ImGui::BeginTable("table", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
                 ImGui::TableSetupColumn("N");
-                ImGui::TableSetupColumn("Scalar ms");
-                ImGui::TableSetupColumn("NEON ms");
-                ImGui::TableSetupColumn("Unrolled ms");
-                ImGui::TableSetupColumn("Speedup");
+                ImGui::TableSetupColumn("Скалярный, мс");
+                ImGui::TableSetupColumn("NEON, мс");
+                ImGui::TableSetupColumn("Развёрнутый, мс");
+                ImGui::TableSetupColumn("Ускорение");
                 ImGui::TableHeadersRow();
                 for (const auto& r : rows) {
                     ImGui::TableNextRow();

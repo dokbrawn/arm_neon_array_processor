@@ -172,3 +172,6 @@ CLEAN_FIRST=0 BUILD_DIR=build_custom ./setup_and_run.sh
 
 
 MSVC кодировка: для корректного русского текста в GUI в CMake включён флаг `/utf-8`, а на Windows шрифт выбирается из `Segoe UI/Arial/Consolas`.
+
+
+В GUI графики теперь не фиксируются авто-подгонкой на каждом кадре: их можно двигать мышью (pan) и масштабировать колесом (zoom).
