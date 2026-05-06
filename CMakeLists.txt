@@ -11,36 +11,49 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm")
 endif()
 
 option(BUILD_GUI "Build ImGui/ImPlot GUI" ON)
+option(USE_BUNDLED_THIRD_PARTY "Use local third_party/{imgui,implot}" ON)
+
 if(BUILD_GUI)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(GLFW REQUIRED glfw3)
+  find_package(OpenGL REQUIRED)
 
-  include(FetchContent)
-  FetchContent_Declare(imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG v1.91.9b)
-  FetchContent_Declare(implot
-    GIT_REPOSITORY https://github.com/epezent/implot.git
-    GIT_TAG v0.16)
-  FetchContent_MakeAvailable(imgui implot)
+  set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/third_party/imgui")
+  set(IMPLOT_DIR "${CMAKE_SOURCE_DIR}/third_party/implot")
+
+  if(USE_BUNDLED_THIRD_PARTY AND EXISTS "${IMGUI_DIR}/imgui.cpp" AND EXISTS "${IMPLOT_DIR}/implot.cpp")
+    message(STATUS "Using bundled third_party imgui/implot")
+  else()
+    include(FetchContent)
+    message(STATUS "Bundled imgui/implot not found; using FetchContent")
+    FetchContent_Declare(imgui
+      GIT_REPOSITORY https://github.com/ocornut/imgui.git
+      GIT_TAG v1.91.9b)
+    FetchContent_Declare(implot
+      GIT_REPOSITORY https://github.com/epezent/implot.git
+      GIT_TAG v0.16)
+    FetchContent_MakeAvailable(imgui implot)
+    set(IMGUI_DIR "${imgui_SOURCE_DIR}")
+    set(IMPLOT_DIR "${implot_SOURCE_DIR}")
+  endif()
 
   add_library(imgui_lib
-    ${imgui_SOURCE_DIR}/imgui.cpp
-    ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_tables.cpp
-    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
-    ${implot_SOURCE_DIR}/implot.cpp
-    ${implot_SOURCE_DIR}/implot_items.cpp)
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+    ${IMPLOT_DIR}/implot.cpp
+    ${IMPLOT_DIR}/implot_items.cpp)
+
   target_include_directories(imgui_lib PUBLIC
-    ${imgui_SOURCE_DIR}
-    ${imgui_SOURCE_DIR}/backends
-    ${implot_SOURCE_DIR}
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
+    ${IMPLOT_DIR}
     ${GLFW_INCLUDE_DIRS})
 
   add_executable(bench_gui gui.cpp)
-  target_link_libraries(bench_gui PRIVATE imgui_lib ${GLFW_LIBRARIES} GL)
-  target_compile_definitions(bench_gui PRIVATE IMGUI_IMPL_OPENGL_LOADER_GL3W)
+  target_link_libraries(bench_gui PRIVATE imgui_lib ${GLFW_LIBRARIES} OpenGL::GL)
   target_compile_options(bench_gui PRIVATE -O3)
 endif()
