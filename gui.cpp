@@ -124,7 +124,9 @@ int main() {
         const ImGuiViewport* vp = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(vp->WorkPos);
         ImGui::SetNextWindowSize(vp->WorkSize);
+#ifdef IMGUI_HAS_VIEWPORT
         ImGui::SetNextWindowViewport(vp->ID);
+#endif
         ImGuiWindowFlags main_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar |
                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                       ImGuiWindowFlags_NoCollapse;
