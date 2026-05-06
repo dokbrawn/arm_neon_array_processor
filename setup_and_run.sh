@@ -12,6 +12,7 @@ BUILD_DIR="${BUILD_DIR:-build_auto}"
 BUILD_TYPE="${BUILD_TYPE:-Release}"
 BUILD_GUI="${BUILD_GUI:-ON}"
 USE_BUNDLED_THIRD_PARTY="${USE_BUNDLED_THIRD_PARTY:-ON}"
+STRICT_BUNDLED_GUI="${STRICT_BUNDLED_GUI:-1}"  # 1 = не качать imgui/implot из сети
 RUN_GUI="${RUN_GUI:-0}"   # 1 = запускать GUI после CLI
 CLEAN_FIRST="${CLEAN_FIRST:-1}"
 
@@ -45,10 +46,16 @@ else
 fi
 
 step "ПРОВЕРКА third_party"
-if [[ -f third_party/imgui/imgui.cpp && -f third_party/implot/implot.cpp ]]; then
-  log "Найдены локальные third_party/imgui и third_party/implot"
-else
-  warn "Не найдены локальные third_party библиотеки. CMake попробует FetchContent (нужен интернет)."
+if [[ "$BUILD_GUI" == "ON" && "$USE_BUNDLED_THIRD_PARTY" == "ON" ]]; then
+  if [[ -f third_party/imgui/imgui.cpp && -f third_party/implot/implot.cpp ]]; then
+    log "Найдены локальные third_party/imgui и third_party/implot (будут использованы)"
+  else
+    if [[ "$STRICT_BUNDLED_GUI" == "1" ]]; then
+      err "Не найдены third_party/imgui или third_party/implot. В strict-режиме скачивание запрещено."
+    else
+      warn "Не найдены локальные third_party библиотеки. CMake может использовать FetchContent."
+    fi
+  fi
 fi
 
 step "КОНФИГУРАЦИЯ CMAKE"

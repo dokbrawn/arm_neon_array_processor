@@ -175,3 +175,6 @@ MSVC кодировка: для корректного русского текс
 
 
 В GUI графики теперь не фиксируются авто-подгонкой на каждом кадре: их можно двигать мышью (pan) и масштабировать колесом (zoom).
+
+
+Для Raspberry Pi (Ubuntu) без скачивания ImGui/ImPlot: используйте `BUILD_GUI=ON USE_BUNDLED_THIRD_PARTY=ON STRICT_BUNDLED_GUI=1 ./setup_and_run.sh` (по умолчанию strict уже включён).
