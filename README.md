@@ -103,3 +103,46 @@ cmake --build build_amd64 -j
 ```
 
 В GUI можно включить пункт **"AMD64 демо-режим (эмуляция ускорения)"**, чтобы увидеть более наглядные графики ускорения для демонстрации интерфейса.
+
+
+## Windows + vcpkg (AMD64)
+Если у вас `C:\vcpkg`, для GUI нужен glfw3 через toolchain vcpkg.
+
+```powershell
+# один раз
+C:\vcpkg\vcpkg install glfw3:x64-windows
+
+# конфигурация
+cmake -S . -B build_amd64 -G "Visual Studio 18 2026" -A x64 `
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=ON -DUSE_BUNDLED_THIRD_PARTY=ON
+
+# сборка
+cmake --build build_amd64 --config Release
+
+# запуск
+.\build_amd64\Release\bench_cli.exe
+.\build_amd64\Release\bench_gui.exe
+```
+
+Если не нужен GUI, можно собрать только CLI: `-DBUILD_GUI=OFF`.
+
+
+## Быстрый авто-скрипт (Linux / Raspberry Pi / AMD64)
+В корне есть `setup_and_run.sh`, который:
+1. ставит системные зависимости (через `apt`),
+2. конфигурирует и собирает проект,
+3. запускает `bench_cli`,
+4. опционально запускает GUI.
+
+```bash
+chmod +x setup_and_run.sh
+./setup_and_run.sh
+```
+
+Полезные параметры:
+```bash
+BUILD_GUI=ON RUN_GUI=1 ./setup_and_run.sh
+BUILD_GUI=OFF ./setup_and_run.sh
+CLEAN_FIRST=0 BUILD_DIR=build_custom ./setup_and_run.sh
+```
