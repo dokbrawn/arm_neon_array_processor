@@ -1,45 +1,49 @@
-ARM NEON Array Processor
-========================
+# ARM NEON Array Processor
 
-Проект для демонстрации возможностей ARM NEON SIMD архитектуры.
+Проект под Raspberry Pi 4 (aarch64), демонстрирующий:
 
-Требования
-----------
-- ARM платформа с поддержкой NEON (Raspberry Pi 4, Raspberry Pi 3, etc.)
-- Компилятор g++ с поддержкой NEON
-- Архитектура: aarch64 или armhf
+- скалярную и NEON-реализации обработки массива `int32_t`;
+- безветвевое вычисление `abs` через `vshrq_n_s32/veorq_s32/vsubq_s32`;
+- честный бенчмарк с `std::chrono::steady_clock` и прогревом;
+- экспорт результатов в CSV (открывается в Excel/LibreOffice) и Markdown (можно конвертировать в PDF);
+- GUI на Dear ImGui + ImPlot для визуализации.
 
-Компиляция на Raspberry Pi 4 (aarch64)
---------------------------------------
-g++ -O3 -march=armv8-a+simd -o test_neon main.cpp
+## Алгоритм
+Для каждого элемента:
+- `> 0` -> добавляем как есть;
+- `< 0` -> добавляем модуль;
+- `== 0` -> пропускаем.
 
-Или для armhf:
-g++ -O3 -mfpu=neon -mfloat-abi=hard -o test_neon main.cpp
+Возвращаемый тип — `int64_t`.
 
-Для кросс-компиляции с x86_64:
-aarch64-linux-gnu-g++ -O3 -march=armv8-a+simd -o test_neon_arm main.cpp
+## Сборка CLI
+```bash
+g++ -O3 -march=armv8-a+simd -std=c++17 -o bench_cli main.cpp
+./bench_cli
+```
 
-Запуск
-------
-./test_neon
+## Сборка через CMake (CLI + GUI)
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=ON
+cmake --build build -j
+./build/bench_cli
+./build/bench_gui
+```
 
-Функции
--------
-1. process_array_scalar - скалярная версия (эталон)
-2. process_array_neon - векторная версия с NEON (4 элемента за итерацию)
-3. process_array_neon_unrolled - развернутая версия (8 элементов за итерацию)
+## Экспорт
+После запуска `bench_cli` появятся:
+- `benchmark_<timestamp>.csv` — таблица для Excel;
+- `benchmark_<timestamp>.md` — текстовый отчёт.
 
-Особенности реализации
----------------------
-- Множественная загрузка через vld1q_s32
-- Безветвевое вычисление модуля через баррельный шифтер (vshrq_n_s32)
-- Условное выполнение через маски (vcgtq_s32, vandq_s32, vorrq_s32)
-- Горизонтальное сложение через vaddvq_s32
-- Предзагрузка данных (__builtin_prefetch)
-- Обработка ошибок при передаче nullptr
+PDF:
+```bash
+pandoc benchmark_<timestamp>.md -o benchmark_<timestamp>.pdf
+```
 
-Структура проекта
------------------
-arm_neon_processor.h - заголовочный файл с реализацией функций
-main.cpp - тесты и бенчмарки
-README.md - документация
+## Примечания по требованиям задания
+- SIMD загрузка по 4 `int32_t`: `vld1q_s32`.
+- Остаток `n % 4` обрабатывается скалярно.
+- Маски без ветвлений: `vcgtq_s32`, `vcltq_s32`, `vandq_s32`, `vorrq_s32`.
+- Баррельный шифтер для знака: `vshrq_n_s32(vec, 31)`.
+- Развёртка на 8 элементов + `__builtin_prefetch` в `process_array_neon_unrolled`.
+
